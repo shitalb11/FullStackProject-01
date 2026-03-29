@@ -24,21 +24,18 @@ public class EmailGeneratorService {
     }
 
     public String generateEmailReply(EmailRequest emailRequest) {
-
         try {
-            // 🔹 Build prompt
+            //Build prompt
             String prompt = buildPrompt(emailRequest);
 
-            // 🔹 Request body
+            //Request body
             Map<String, Object> requestBody = Map.of(
                     "contents", new Object[]{
                             Map.of("parts", new Object[]{
-                                    Map.of("text", prompt)
-                            })
-                    }
+                                    Map.of("text", prompt)})}
             );
 
-            // 🔹 API Call
+            //API Call
             String response = webClient.post()
                     .uri(geminiApiUrl + "?key=" + geminiApiKey)
                     .header("Content-Type", "application/json")
@@ -50,12 +47,11 @@ public class EmailGeneratorService {
                     .bodyToMono(String.class)
                     .block();
 
-            // 🔥 Debug print
+            //Debug print
             System.out.println("RAW RESPONSE: " + response);
 
-            // 🔹 Extract text
+            // Extract text
             return extractResponseContent(response);
-
         } catch (Exception e) {
             e.printStackTrace();
             return "ERROR: " + e.getMessage();
@@ -66,21 +62,16 @@ public class EmailGeneratorService {
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(response);
-
             JsonNode candidates = rootNode.path("candidates");
-
             if (!candidates.isArray() || candidates.size() == 0) {
                 return "No valid response: " + response;
             }
-
             JsonNode textNode = candidates.get(0)
                     .path("content")
                     .path("parts")
                     .get(0)
                     .path("text");
-
             return textNode.asText();
-
         } catch (Exception e) {
             e.printStackTrace();
             return "Error: " + e.getMessage();
@@ -89,9 +80,7 @@ public class EmailGeneratorService {
 
     private String buildPrompt(EmailRequest emailRequest) {
         StringBuilder prompt = new StringBuilder();
-
         prompt.append("Generate a professional email reply for the following email content. Do not include a subject line.");
-
         if (emailRequest.getTone() != null && !emailRequest.getTone().isEmpty()) {
             prompt.append(" Use a ").append(emailRequest.getTone()).append(" tone.");
         }
